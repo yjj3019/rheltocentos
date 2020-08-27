@@ -51,6 +51,15 @@ echo "------------------------------ CentOS Base Packages Install --------------
 
 ### CentOS Repository Listing
 echo "------------------------------ CentOS Repository Listing ------------------------------" 
+if [ ! -f /usr/bin/yum-config-manager ];then
+	echo "yum-config-manager Not Found and yum-utils install.."
+	/usr/bin/yum -y install yum-utils
+	if [ $? -ge 1 ];then
+		echo "yum utils Package Install Failed..."
+		exit 1;
+	fi 
+fi
+
 /usr/bin/yum repolist --disablerepo=* 
 /usr/bin/yum-config-manager --disable \* 
 /usr/bin/yum-config-manager --enable local
@@ -184,5 +193,3 @@ echo "------------------------------ Red Hat Package Total Count ---------------
 echo "------------------------------ Red Hat Package List Gather ------------------------------" >> $mig_after
 /usr/bin/rpm -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo >> $mig_after
 echo "-----------------------------------------------------------------------------------" >> $mig_after
-
-
