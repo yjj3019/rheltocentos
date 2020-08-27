@@ -41,12 +41,13 @@ echo "------------------------------ Red Hat Packages Remove -------------------
 
 /usr/bin/yum remove anaconda-user-help python-gudev python-hwdata redhat-access-gui redhat-access-insights redhat-support-lib-python redhat-support-tool subscription-manager subscription-manager-gui subscription-manager-initial-setup-addon NetworkManager-config-server Red_Hat_Enterprise_Linux-Release_Notes-7-en-US Red_Hat_Enterprise_Linux-Release_Notes-7-ko-KR rhsm-gtk xorriso redhat-access-plugin-ipa -y
 
-/usr/bin/rpm -e --nodeps redhat-release-server redhat-indexhtml
+/usr/bin/rpm -e --nodeps redhat-release-server
+/usr/bin/rpm -e --nodeps redhat-indexhtml
 /usr/bin/rm -rf /usr/share/redhat-release* /usr/share/doc/redhat-release*
 
 ### CentOS Base Package Install
 echo "------------------------------ CentOS Base Packages Install ------------------------------"
-/usr/bin/yum install centos-indexhtml centos-release yum yum-plugin-fastestmirror -y
+/usr/bin/yum -y install centos-indexhtml centos-release yum yum-plugin-fastestmirror
 
 ### CentOS Repository Listing
 echo "------------------------------ CentOS Repository Listing ------------------------------" 
@@ -71,11 +72,11 @@ echo "------------------------------ CentOS kernel Package Reinstall -----------
 if [ $kerver -eq "3" ];then
 	echo "Kernel Reinstall OSVER : $osver"
 	/usr/bin/yum -y reinstall $(rpm -qa --qf "%{NAME} %{VENDOR} \n" | grep "kernel" | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
-	/usr/bin/rpm -ivh --force http://$repip/centos/$osver/Packages/$(rpm -qa|grep kernel-$kerver).rpm
+	/usr/bin/rpm -ivh --force http://$repip/centos/$osver/Packages/$(rpm -qa|grep kernel-3).rpm
 elif [ $kerver -eq "2" ];then
         echo "Kernel Reinstall OSVER : $osver"
         /usr/bin/yum -y reinstall $(rpm -qa --qf "%{NAME} %{VENDOR} \n" | grep "kernel" | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
-        /usr/bin/rpm -ivh --force http://$repip/centos/$osver/Packages/$(rpm -qa|grep kernel-$kerver).rpm
+        /usr/bin/rpm -ivh --force http://$repip/centos/$osver/Packages/$(rpm -qa|grep kernel-2).rpm
 fi
 
 ### grub Listing
