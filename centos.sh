@@ -37,9 +37,7 @@ EOF
 
 ### Red Hat Packages Remove
 echo "------------------------------ Red Hat Packages Remove ------------------------------"
-/usr/bin/yum -y remove rhnlib abrt-plugin-bugzilla redhat-release-notes*
-
-/usr/bin/yum remove anaconda-user-help python-gudev python-hwdata redhat-access-gui redhat-access-insights redhat-support-lib-python redhat-support-tool subscription-manager subscription-manager-gui subscription-manager-initial-setup-addon NetworkManager-config-server Red_Hat_Enterprise_Linux-Release_Notes-7-en-US Red_Hat_Enterprise_Linux-Release_Notes-7-ko-KR rhsm-gtk xorriso redhat-access-plugin-ipa -y
+/usr/bin/yum -y remove rhnlib abrt-plugin-bugzilla redhat-release-notes* redhat-release-eula anaconda-user-help python-gudev python-hwdata redhat-access-gui redhat-access-insights redhat-support-lib-python redhat-support-tool subscription-manager subscription-manager-gui subscription-manager-initial-setup-addon NetworkManager-config-server Red_Hat_Enterprise_Linux-Release_Notes-7-en-US Red_Hat_Enterprise_Linux-Release_Notes-7-ko-KR rhsm-gtk xorriso redhat-access-plugin-ipa -y
 
 /usr/bin/rpm -e --nodeps redhat-release-server
 /usr/bin/rpm -e --nodeps redhat-indexhtml
