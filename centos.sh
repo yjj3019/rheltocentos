@@ -57,6 +57,9 @@ elif [ $osversion -eq "6" ];then
         	$yumre $($rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "kernel" | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
         	$rpmbin -ivh --force http://$repip/centos/$osver/Packages/$($rpmbin -qa|grep kernel-2).rpm
 	}
+	bootloader() {
+		echo " bootloader skip... "
+	}
 else
         echo "Version Check Fail..."
         exit 1;
