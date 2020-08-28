@@ -1,5 +1,10 @@
 #!/bin/sh
 
+###########################################################################
+# rhel to centos migration Script
+# Ver. 01
+###########################################################################
+
 export mig_before="/root/migration_before.txt"
 export mig_after="/root/migration_after.txt"
 export repip="10.65.30.103"
