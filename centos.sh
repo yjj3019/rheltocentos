@@ -6,6 +6,11 @@ set -x
 # Ver. 06
 ###########################################################################
 
+if [ ! -f /etc/redhat-release ];then
+	echo "NOT FOUND... /etc/redhat-release"
+	exit 1;
+fi
+
 export mig_before="/root/migration_before.txt"
 export mig_after="/root/migration_after.txt"
 export repip="10.65.30.103"
@@ -13,22 +18,48 @@ export osver=`cat /etc/redhat-release |awk '{print $7}'`
 export osversion=`cat /etc/redhat-release |awk '{print $7}'|awk -F\. '{print $1}'`
 export yumbin="/usr/bin/yum"
 
+
+
 if [ $osversion -eq "7" ];then
 	export kerver=$(/usr/bin/uname -r|awk -F\. '{print $1}'|grep ^[0-9]*)
 	export rpmbin="/usr/bin/rpm"
+	export gpg="gpgkey=http://$repip/centos/$osver/RPM-GPG-KEY-CentOS-7"
+	export rmbin="/usr/bin/rm"
+	export yumre="$yumbin -y reinstall --"
 	echo "Kernel Reinstall OSVER : $osver"
-	$yumbin -y reinstall $($rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "kernel" | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
+	pkg_upgrade() {
+		$yumbin upgrade -y 
+	}
 	kernel_install() {
+		$yumre $($rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "kernel" | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
 		$rpmbin -ivh --force http://$repip/centos/$osver/Packages/$($rpmbin -qa|grep kernel-3).rpm
+	}
+	bootloader() {
+	if [ -f /boot/grub2/grub.cfg ]; then
+		echo "MBR grub..."
+		/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg	
+	elif [ -f /boot/efi/EFI/centos/grub.cfg ]; then
+		echo "EFI grub..."
+		/usr/sbin/grub2-mkconfig -o /boot/efi/EFI/centos/grub.cfg
+	fi
 	}
 elif [ $osversion -eq "6" ];then
 	export kerver=$(/bin/uname -r|awk -F\. '{print $1}'|grep ^[0-9]*)
 	export rpmbin="/bin/rpm"
+	export gpg="gpgkey=http://$repip/centos/$osver/RPM-GPG-KEY-CentOS-6"
+	export rmbin="/bin/rm"
+	export yumre="$yumbin -y reinstall --disablerepo=* --enablerepo=local"
         echo "Kernel Reinstall OSVER : $osver"
-        $yumbin -y reinstall $($rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "kernel" | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
+	pkg_upgrade() {
+		$yumbin upgrade -y --disablerepo=* --enablerepo=local
+	}
 	kernel_install() {
+        	$yumre $($rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "kernel" | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
         	$rpmbin -ivh --force http://$repip/centos/$osver/Packages/$($rpmbin -qa|grep kernel-2).rpm
 	}
+else
+        echo "Version Check Fail..."
+        exit 1;
 fi
 
 ### before info gather
@@ -55,22 +86,19 @@ cat << EOF > /etc/yum.repos.d/local.repo
 [local]
 name=local
 baseurl=http://$repip/centos/$osver/
+$gpg
 gpgcheck=1
-gpgkey=http://$repip/centos/$osver/RPM-GPG-KEY-CentOS-7
-enabled = 1
+enabled=1
 EOF
 
 ### Red Hat Packages Remove
 echo "------------------------------ Red Hat Packages Remove ------------------------------"
-$yumbin -y remove rhnlib abrt-plugin-bugzilla redhat-release-notes* redhat-release-eula anaconda-user-help python-gudev python-hwdata redhat-access-gui redhat-access-insights redhat-support-lib-python redhat-support-tool subscription-manager subscription-manager-gui subscription-manager-initial-setup-addon NetworkManager-config-server Red_Hat_Enterprise_Linux-Release_Notes-7-en-US Red_Hat_Enterprise_Linux-Release_Notes-7-ko-KR rhsm-gtk xorriso redhat-access-plugin-ipa -y
+$yumbin -y remove rhnlib abrt-plugin-bugzilla redhat-release-notes* redhat-release-eula anaconda-user-help python-gudev python-hwdata redhat-access-gui redhat-access-insights redhat-support-lib-python redhat-support-tool subscription-manager subscription-manager-gui subscription-manager-initial-setup-addon NetworkManager-config-server Red_Hat_Enterprise_Linux-Release_Notes-7-en-US Red_Hat_Enterprise_Linux-Release_Notes-7-ko-KR rhsm-gtk xorriso redhat-access-plugin-ipa
 
 $rpmbin -e --nodeps redhat-release-server
 $rpmbin -e --nodeps redhat-indexhtml
-/usr/bin/rm -rf /usr/share/redhat-release* /usr/share/doc/redhat-release*
+$rmbin -rf /usr/share/redhat-release* /usr/share/doc/redhat-release*
 
-### CentOS Base Package Install
-echo "------------------------------ CentOS Base Packages Install ------------------------------"
-$yumbin -y install centos-indexhtml centos-release yum yum-plugin-fastestmirror
 
 ### CentOS Repository Listing
 echo "------------------------------ CentOS Repository Listing ------------------------------" 
@@ -90,13 +118,17 @@ $yumbin repolist --disablerepo=*
 $yumbin clean all
 $yumbin repolist
 
+### CentOS Base Package Install
+echo "------------------------------ CentOS Base Packages Install ------------------------------"
+$yumbin -y install centos-indexhtml centos-release yum yum-plugin-fastestmirror
+
 ### CentOS Package Upgrade
 echo "------------------------------ CentOS Package Upgrade ------------------------------" 
-$yumbin upgrade -y
+pkg_upgrade
 
 ### CentOS Pcakage Reinstall
 echo "------------------------------ CentOS Package Reinstall ------------------------------" 
-$yumbin -y reinstall $($rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
+$yumre $($rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
 
 ### kernel reinstall
 echo "------------------------------ CentOS kernel Package Reinstall ------------------------------" 
@@ -104,18 +136,12 @@ kernel_install
 
 ### grub Listing
 echo "------------------------------ CentOS grub Listing ------------------------------" 
-if [ -f /boot/grub2/grub.cfg ]; then
-	echo "MBR grub..."
-	/usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg	
-elif [ -f /boot/efi/EFI/centos/grub.cfg ]; then
-	echo "EFI grub..."
-	/usr/sbin/grub2-mkconfig -o /boot/efi/EFI/centos/grub.cfg
-fi
+bootloader
 
 
 echo "------------------------------ Other Package Reinstall ------------------------------" 
 ### openssl reinstall
-yum -y reinstall $($rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "openssl" | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
+$yumre $($rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "openssl" | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
 
 ### openssl098e
 num1=`$rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | grep "openssl098e" | cut -d ' ' -f 1 | sort|wc -l` > /dev/null 2>&1
@@ -193,7 +219,7 @@ echo "mokutil Skip..."
 fi
 
 ### filesystem
-yum -y reinstall filesystem
+$yumre filesystem
 
 ### Other Red Hat Package Result
 echo "------------------------------ Other Red Hat Package ------------------------------" 
@@ -206,4 +232,5 @@ $rpmbin -qa|wc -l >> $mig_after
 echo "------------------------------ Red Hat Package List Gather ------------------------------" >> $mig_after
 $rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo >> $mig_after
 echo "-----------------------------------------------------------------------------------" >> $mig_after
+
 
