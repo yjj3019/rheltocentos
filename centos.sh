@@ -1,4 +1,5 @@
 #!/bin/sh
+set -x
 
 ###########################################################################
 # rhel to centos migration Script
@@ -8,18 +9,36 @@
 export mig_before="/root/migration_before.txt"
 export mig_after="/root/migration_after.txt"
 export repip="10.65.30.103"
-export kerver=$(/usr/bin/uname -r|awk -F\. '{print $1}'|grep ^[0-9]*)
+export osver=`cat /etc/redhat-release |awk '{print $7}'`
+export osversion=`cat /etc/redhat-release |awk '{print $7}'|awk -F\. '{print $1}'`
+
+if [ $osversion -eq "7" ];then
+	echo "Kernel Reinstall OSVER : $osver"
+	/usr/bin/yum -y reinstall $(rpm -qa --qf "%{NAME} %{VENDOR} \n" | grep "kernel" | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
+	export kerver=$(/usr/bin/uname -r|awk -F\. '{print $1}'|grep ^[0-9]*)
+	export rpmbin="/usr/bin/rpm"
+	kernel_install() {
+		$rpmbin -ivh --force http://$repip/centos/$osver/Packages/$(rpm -qa|grep kernel-3).rpm
+	}
+elif [ $osversion -eq "6" ];then
+        echo "Kernel Reinstall OSVER : $osver"
+        /usr/bin/yum -y reinstall $(rpm -qa --qf "%{NAME} %{VENDOR} \n" | grep "kernel" | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
+	export kerver=$(/bin/uname -r|awk -F\. '{print $1}'|grep ^[0-9]*)
+	export rpmbin="/bin/rpm"
+	kernel_install() {
+        $rpmbin -ivh --force http://$repip/centos/$osver/Packages/$(rpm -qa|grep kernel-2).rpm
+	}
+fi
 
 ### before info gather
 echo "------------------------------ Red Hat Before Info Gather ------------------------------" 
 echo "------------------------------ Red Hat Package Total Count ------------------------------" > $mig_before
-/usr/bin/rpm -qa|wc -l >> $mig_before
+$rpmbin -qa|wc -l >> $mig_before
 echo "------------------------------ Red Hat Package List Gather ------------------------------" >> $mig_before
-/usr/bin/rpm -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo >> $mig_before
+$rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo >> $mig_before
 echo "-----------------------------------------------------------------------------------" >> $mig_before
 
 ### Repository Check 
-osver=`cat /etc/redhat-release |awk '{print $7}'`
 
 RES_CODE=$(/usr/bin/curl -s -o /dev/null -I -w "%{http_code}"  "http://$repip/centos/$osver/TRANS.TBL")
 if [ $RES_CODE -eq 200 ]; then
@@ -44,8 +63,8 @@ EOF
 echo "------------------------------ Red Hat Packages Remove ------------------------------"
 /usr/bin/yum -y remove rhnlib abrt-plugin-bugzilla redhat-release-notes* redhat-release-eula anaconda-user-help python-gudev python-hwdata redhat-access-gui redhat-access-insights redhat-support-lib-python redhat-support-tool subscription-manager subscription-manager-gui subscription-manager-initial-setup-addon NetworkManager-config-server Red_Hat_Enterprise_Linux-Release_Notes-7-en-US Red_Hat_Enterprise_Linux-Release_Notes-7-ko-KR rhsm-gtk xorriso redhat-access-plugin-ipa -y
 
-/usr/bin/rpm -e --nodeps redhat-release-server
-/usr/bin/rpm -e --nodeps redhat-indexhtml
+$rpmbin -e --nodeps redhat-release-server
+$rpmbin -e --nodeps redhat-indexhtml
 /usr/bin/rm -rf /usr/share/redhat-release* /usr/share/doc/redhat-release*
 
 ### CentOS Base Package Install
@@ -81,15 +100,7 @@ echo "------------------------------ CentOS Package Reinstall ------------------
 ### kernel reinstall
 echo "------------------------------ CentOS kernel Package Reinstall ------------------------------" 
 
-if [ $kerver -eq "3" ];then
-	echo "Kernel Reinstall OSVER : $osver"
-	/usr/bin/yum -y reinstall $(rpm -qa --qf "%{NAME} %{VENDOR} \n" | grep "kernel" | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
-	/usr/bin/rpm -ivh --force http://$repip/centos/$osver/Packages/$(rpm -qa|grep kernel-3).rpm
-elif [ $kerver -eq "2" ];then
-        echo "Kernel Reinstall OSVER : $osver"
-        /usr/bin/yum -y reinstall $(rpm -qa --qf "%{NAME} %{VENDOR} \n" | grep "kernel" | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
-        /usr/bin/rpm -ivh --force http://$repip/centos/$osver/Packages/$(rpm -qa|grep kernel-2).rpm
-fi
+kernel_install
 
 ### grub Listing
 echo "------------------------------ CentOS grub Listing ------------------------------" 
@@ -145,7 +156,7 @@ echo "dhclient Install... Change"
 #rpm -e --nodeps $(rpm -qa|grep -E "dhclient|dhcp-libs|dhcp-common")
 yum -y remove dhclient dhcp-libs dhcp-common
 yum -y install dhclient abrt-addon-vmcore abrt-cli abrt-console-notification abrt-desktop anaconda-core anaconda-tui dracut-network initial-setup kexec-tools 
-/usr/bin/rpm -qa|grep -i -E "abrt-addon-vmcore|abrt-cli|abrt-console-notification|abrt-desktop|anaconda-core|anaconda-tui|dracut-network|initial-setup-0|kexec-tools"
+$rpmbin -qa|grep -i -E "abrt-addon-vmcore|abrt-cli|abrt-console-notification|abrt-desktop|anaconda-core|anaconda-tui|dracut-network|initial-setup-0|kexec-tools"
 else
 echo "dhclient Skip..."
 fi
@@ -192,7 +203,8 @@ rpm -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1 | s
 ### after info gather
 echo "------------------------------ Red Hat Before Info Gather ------------------------------" 
 echo "------------------------------ Red Hat Package Total Count ------------------------------" > $mig_after
-/usr/bin/rpm -qa|wc -l >> $mig_after
+$rpmbin -qa|wc -l >> $mig_after
 echo "------------------------------ Red Hat Package List Gather ------------------------------" >> $mig_after
-/usr/bin/rpm -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo >> $mig_after
+$rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo >> $mig_after
 echo "-----------------------------------------------------------------------------------" >> $mig_after
+
