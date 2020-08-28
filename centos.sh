@@ -11,22 +11,23 @@ export mig_after="/root/migration_after.txt"
 export repip="10.65.30.103"
 export osver=`cat /etc/redhat-release |awk '{print $7}'`
 export osversion=`cat /etc/redhat-release |awk '{print $7}'|awk -F\. '{print $1}'`
+export yumbin="/usr/bin/yum"
 
 if [ $osversion -eq "7" ];then
-	echo "Kernel Reinstall OSVER : $osver"
-	/usr/bin/yum -y reinstall $(rpm -qa --qf "%{NAME} %{VENDOR} \n" | grep "kernel" | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
 	export kerver=$(/usr/bin/uname -r|awk -F\. '{print $1}'|grep ^[0-9]*)
 	export rpmbin="/usr/bin/rpm"
+	echo "Kernel Reinstall OSVER : $osver"
+	$yumbin -y reinstall $($rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "kernel" | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
 	kernel_install() {
-		$rpmbin -ivh --force http://$repip/centos/$osver/Packages/$(rpm -qa|grep kernel-3).rpm
+		$rpmbin -ivh --force http://$repip/centos/$osver/Packages/$($rpmbin -qa|grep kernel-3).rpm
 	}
 elif [ $osversion -eq "6" ];then
-        echo "Kernel Reinstall OSVER : $osver"
-        /usr/bin/yum -y reinstall $(rpm -qa --qf "%{NAME} %{VENDOR} \n" | grep "kernel" | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
 	export kerver=$(/bin/uname -r|awk -F\. '{print $1}'|grep ^[0-9]*)
 	export rpmbin="/bin/rpm"
+        echo "Kernel Reinstall OSVER : $osver"
+        $yumbin -y reinstall $($rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "kernel" | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
 	kernel_install() {
-        $rpmbin -ivh --force http://$repip/centos/$osver/Packages/$(rpm -qa|grep kernel-2).rpm
+        	$rpmbin -ivh --force http://$repip/centos/$osver/Packages/$($rpmbin -qa|grep kernel-2).rpm
 	}
 fi
 
@@ -61,7 +62,7 @@ EOF
 
 ### Red Hat Packages Remove
 echo "------------------------------ Red Hat Packages Remove ------------------------------"
-/usr/bin/yum -y remove rhnlib abrt-plugin-bugzilla redhat-release-notes* redhat-release-eula anaconda-user-help python-gudev python-hwdata redhat-access-gui redhat-access-insights redhat-support-lib-python redhat-support-tool subscription-manager subscription-manager-gui subscription-manager-initial-setup-addon NetworkManager-config-server Red_Hat_Enterprise_Linux-Release_Notes-7-en-US Red_Hat_Enterprise_Linux-Release_Notes-7-ko-KR rhsm-gtk xorriso redhat-access-plugin-ipa -y
+$yumbin -y remove rhnlib abrt-plugin-bugzilla redhat-release-notes* redhat-release-eula anaconda-user-help python-gudev python-hwdata redhat-access-gui redhat-access-insights redhat-support-lib-python redhat-support-tool subscription-manager subscription-manager-gui subscription-manager-initial-setup-addon NetworkManager-config-server Red_Hat_Enterprise_Linux-Release_Notes-7-en-US Red_Hat_Enterprise_Linux-Release_Notes-7-ko-KR rhsm-gtk xorriso redhat-access-plugin-ipa -y
 
 $rpmbin -e --nodeps redhat-release-server
 $rpmbin -e --nodeps redhat-indexhtml
@@ -69,37 +70,36 @@ $rpmbin -e --nodeps redhat-indexhtml
 
 ### CentOS Base Package Install
 echo "------------------------------ CentOS Base Packages Install ------------------------------"
-/usr/bin/yum -y install centos-indexhtml centos-release yum yum-plugin-fastestmirror
+$yumbin -y install centos-indexhtml centos-release yum yum-plugin-fastestmirror
 
 ### CentOS Repository Listing
 echo "------------------------------ CentOS Repository Listing ------------------------------" 
-if [ ! -f /usr/bin/yum-config-manager ];then
+if [ ! -f $yumbin-config-manager ];then
 	echo "yum-config-manager Not Found and yum-utils install.."
-	/usr/bin/yum -y install yum-utils
+	$yumbin -y install yum-utils
 	if [ $? -ge 1 ];then
 		echo "yum utils Package Install Failed..."
 		exit 1;
 	fi 
 fi
 
-/usr/bin/yum repolist --disablerepo=* 
+$yumbin repolist --disablerepo=* 
 /usr/bin/yum-config-manager --disable \* 
 /usr/bin/yum-config-manager --enable local
 
-/usr/bin/yum clean all
-/usr/bin/yum  repolist
+$yumbin clean all
+$yumbin repolist
 
 ### CentOS Package Upgrade
 echo "------------------------------ CentOS Package Upgrade ------------------------------" 
-/usr/bin/yum upgrade -y
+$yumbin upgrade -y
 
 ### CentOS Pcakage Reinstall
 echo "------------------------------ CentOS Package Reinstall ------------------------------" 
-/usr/bin/yum -y reinstall $(rpm -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
+$yumbin -y reinstall $($rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
 
 ### kernel reinstall
 echo "------------------------------ CentOS kernel Package Reinstall ------------------------------" 
-
 kernel_install
 
 ### grub Listing
@@ -115,10 +115,10 @@ fi
 
 echo "------------------------------ Other Package Reinstall ------------------------------" 
 ### openssl reinstall
-yum -y reinstall $(rpm -qa --qf "%{NAME} %{VENDOR} \n" | grep "openssl" | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
+yum -y reinstall $($rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "openssl" | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
 
 ### openssl098e
-num1=`rpm -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | grep "openssl098e" | cut -d ' ' -f 1 | sort|wc -l` > /dev/null 2>&1
+num1=`$rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | grep "openssl098e" | cut -d ' ' -f 1 | sort|wc -l` > /dev/null 2>&1
 if [ $num1 -ge 1 ];then
 echo "openssl098e Install... Change"
 yum -y remove openssl098e
@@ -128,7 +128,7 @@ echo "openssl098e Skip..."
 fi
 
 ### ntp
-num2=`rpm -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | grep "ntp" | cut -d ' ' -f 1 | sort|wc -l` > /dev/null 2>&1
+num2=`$rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | grep "ntp" | cut -d ' ' -f 1 | sort|wc -l` > /dev/null 2>&1
 if [ $num2 -ge 1 ];then
 echo "ntp Install... Change"
 /usr/bin/cp -f /etc/ntp.conf /tmp > /dev/null 2>&1
@@ -140,7 +140,7 @@ echo "ntp Skip..."
 fi
 
 ### xulrunner
-num3=`rpm -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | grep "xulrunner" | cut -d ' ' -f 1 | sort|wc -l` > /dev/null 2>&1
+num3=`$rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | grep "xulrunner" | cut -d ' ' -f 1 | sort|wc -l` > /dev/null 2>&1
 if [ $num3 -ge 1 ];then
 echo "xulrunner Install... Change"
 yum -y remove xulrunner
@@ -150,10 +150,10 @@ echo "xulrunner Skip..."
 fi
 
 ### dhclient
-num4=`rpm -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | grep "dhclient" | cut -d ' ' -f 1 | sort|wc -l` > /dev/null 2>&1
+num4=`$rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | grep "dhclient" | cut -d ' ' -f 1 | sort|wc -l` > /dev/null 2>&1
 if [ $num4 -ge 1 ];then
 echo "dhclient Install... Change"
-#rpm -e --nodeps $(rpm -qa|grep -E "dhclient|dhcp-libs|dhcp-common")
+#$rpmbin -e --nodeps $($rpmbin -qa|grep -E "dhclient|dhcp-libs|dhcp-common")
 yum -y remove dhclient dhcp-libs dhcp-common
 yum -y install dhclient abrt-addon-vmcore abrt-cli abrt-console-notification abrt-desktop anaconda-core anaconda-tui dracut-network initial-setup kexec-tools 
 $rpmbin -qa|grep -i -E "abrt-addon-vmcore|abrt-cli|abrt-console-notification|abrt-desktop|anaconda-core|anaconda-tui|dracut-network|initial-setup-0|kexec-tools"
@@ -162,7 +162,7 @@ echo "dhclient Skip..."
 fi
 
 ### firefox
-num5=`rpm -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | grep "firefox" | cut -d ' ' -f 1 | sort|wc -l` > /dev/null 2>&1
+num5=`$rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | grep "firefox" | cut -d ' ' -f 1 | sort|wc -l` > /dev/null 2>&1
 if [ $num5 -ge 1 ];then
 echo "firefox Install... Change"
 yum -y remove firefox
@@ -173,7 +173,7 @@ fi
 
 
 ### kmod-kvdo
-num6=`rpm -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | grep "kmod-kvdo" | cut -d ' ' -f 1 | sort|wc -l` > /dev/null 2>&1
+num6=`$rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | grep "kmod-kvdo" | cut -d ' ' -f 1 | sort|wc -l` > /dev/null 2>&1
 if [ $num6 -ge 1 ];then
 echo "kmod-kvdo Install... Change"
 yum -y remove kmod-kvdo
@@ -183,7 +183,7 @@ echo "kmod-kvdo Skip..."
 fi
 
 ### mokutil
-num7=`rpm -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | grep "mokutil" | cut -d ' ' -f 1 | sort|wc -l` > /dev/null 2>&1
+num7=`$rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | grep "mokutil" | cut -d ' ' -f 1 | sort|wc -l` > /dev/null 2>&1
 if [ $num7 -ge 1 ];then
 echo "mokutil Install... Change"
 yum -y remove mokutil
@@ -192,13 +192,12 @@ else
 echo "mokutil Skip..."
 fi
 
-
 ### filesystem
 yum -y reinstall filesystem
 
 ### Other Red Hat Package Result
 echo "------------------------------ Other Red Hat Package ------------------------------" 
-rpm -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1 | sort
+$rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1 | sort
 
 ### after info gather
 echo "------------------------------ Red Hat Before Info Gather ------------------------------" 
