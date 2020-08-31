@@ -20,6 +20,7 @@ export yumbin="/usr/bin/yum"
 
 
 
+### 7 version env
 if [ $osversion -eq "7" ];then
 	export kerver=$(/usr/bin/uname -r|awk -F\. '{print $1}'|grep ^[0-9]*)
 	export rpmbin="/usr/bin/rpm"
@@ -43,15 +44,16 @@ if [ $osversion -eq "7" ];then
 		/usr/sbin/grub2-mkconfig -o /boot/efi/EFI/centos/grub.cfg
 	fi
 	}
+### 6 version env
 elif [ $osversion -eq "6" ];then
 	export kerver=$(/bin/uname -r|awk -F\. '{print $1}'|grep ^[0-9]*)
 	export rpmbin="/bin/rpm"
 	export gpg="gpgkey=http://$repip/centos/$osver/RPM-GPG-KEY-CentOS-6"
 	export rmbin="/bin/rm"
-	export yumre="$yumbin -y reinstall --disablerepo=* --enablerepo=local"
+	export yumre="$yumbin -y reinstall"
         echo "Kernel Reinstall OSVER : $osver"
 	pkg_upgrade() {
-		$yumbin upgrade -y --disablerepo=* --enablerepo=local
+		$yumbin upgrade -y
 	}
 	kernel_install() {
         	$yumre $($rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "kernel" | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo)
