@@ -152,8 +152,8 @@ $yumre $($rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "openssl" | cut -d ' ' -
 num1=`$rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | grep "openssl098e" | cut -d ' ' -f 1 | sort|wc -l` > /dev/null 2>&1
 if [ $num1 -ge 1 ];then
 echo "openssl098e Install... Change"
-yum -y remove openssl098e
-yum -y install openssl098e
+$yumbin -y remove openssl098e
+$yumbin -y install openssl098e
 else
 echo "openssl098e Skip..."
 fi
@@ -163,8 +163,8 @@ num2=`$rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | grep "ntp
 if [ $num2 -ge 1 ];then
 echo "ntp Install... Change"
 /usr/bin/cp -f /etc/ntp.conf /tmp > /dev/null 2>&1
-yum -y remove ntp*
-yum -y install ntp*cat
+$yumbin -y remove ntp
+$yumbin yum -y install ntp
 /usr/bin/cp -f /tmp/ntp.conf /etc > /dev/null 2>&1
 else
 echo "ntp Skip..."
@@ -174,8 +174,8 @@ fi
 num3=`$rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | grep "xulrunner" | cut -d ' ' -f 1 | sort|wc -l` > /dev/null 2>&1
 if [ $num3 -ge 1 ];then
 echo "xulrunner Install... Change"
-yum -y remove xulrunner
-yum -y install xulrunner esc
+$yumbin -y remove xulrunner
+$yumbin -y install xulrunner esc
 else
 echo "xulrunner Skip..."
 fi
@@ -185,9 +185,8 @@ num4=`$rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | grep "dhc
 if [ $num4 -ge 1 ];then
 echo "dhclient Install... Change"
 #$rpmbin -e --nodeps $($rpmbin -qa|grep -E "dhclient|dhcp-libs|dhcp-common")
-yum -y remove dhclient dhcp-libs dhcp-common
-yum -y install dhclient abrt-addon-vmcore abrt-cli abrt-console-notification abrt-desktop anaconda-core anaconda-tui dracut-network initial-setup kexec-tools 
-$rpmbin -qa|grep -i -E "abrt-addon-vmcore|abrt-cli|abrt-console-notification|abrt-desktop|anaconda-core|anaconda-tui|dracut-network|initial-setup-0|kexec-tools"
+$yumbin -y remove dhclient dhcp-libs dhcp-common
+$yumbin -y install dhclient abrt-addon-vmcore abrt-cli abrt-console-notification abrt-desktop anaconda-core anaconda-tui dracut-network initial-setup kexec-tools 
 else
 echo "dhclient Skip..."
 fi
@@ -196,8 +195,8 @@ fi
 num5=`$rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | grep "firefox" | cut -d ' ' -f 1 | sort|wc -l` > /dev/null 2>&1
 if [ $num5 -ge 1 ];then
 echo "firefox Install... Change"
-yum -y remove firefox
-yum -y install firefox 
+$yumbin -y remove firefox
+$yumbin -y install firefox 
 else
 echo "firefox Skip..."
 fi
@@ -207,8 +206,8 @@ fi
 num6=`$rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | grep "kmod-kvdo" | cut -d ' ' -f 1 | sort|wc -l` > /dev/null 2>&1
 if [ $num6 -ge 1 ];then
 echo "kmod-kvdo Install... Change"
-yum -y remove kmod-kvdo
-yum -y install kmod-kvdo vdo
+$yumbin -y remove kmod-kvdo
+$yumbin -y install kmod-kvdo vdo
 else
 echo "kmod-kvdo Skip..."
 fi
@@ -217,8 +216,8 @@ fi
 num7=`$rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | grep "mokutil" | cut -d ' ' -f 1 | sort|wc -l` > /dev/null 2>&1
 if [ $num7 -ge 1 ];then
 echo "mokutil Install... Change"
-yum -y remove mokutil
-yum -y install mokutil systemtap systemtap-client
+$yumbin -y remove mokutil
+$yumbin -y install mokutil systemtap systemtap-client
 else
 echo "mokutil Skip..."
 fi
