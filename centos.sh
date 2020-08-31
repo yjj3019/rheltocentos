@@ -45,7 +45,7 @@ if [ $osversion -eq "7" ];then
 	}
 elif [ $osversion -eq "6" ];then
 	export kerver=$(/bin/uname -r|awk -F\. '{print $1}'|grep ^[0-9]*)
-	export rpmbin="/bin/rpm --disablerepo=* --enablerepo=local"
+	export rpmbin="/bin/rpm"
 	export gpg="gpgkey=http://$repip/centos/$osver/RPM-GPG-KEY-CentOS-6"
 	export rmbin="/bin/rm"
 	export yumre="$yumbin -y reinstall --disablerepo=* --enablerepo=local"
@@ -102,6 +102,9 @@ $rpmbin -e --nodeps redhat-release-server
 $rpmbin -e --nodeps redhat-indexhtml
 $rmbin -rf /usr/share/redhat-release* /usr/share/doc/redhat-release*
 
+### CentOS Base Package Install
+echo "------------------------------ CentOS Base Packages Install ------------------------------"
+$yumbin -y install centos-indexhtml centos-release yum yum-plugin-fastestmirror
 
 ### CentOS Repository Listing
 echo "------------------------------ CentOS Repository Listing ------------------------------" 
@@ -121,9 +124,6 @@ $yumbin repolist --disablerepo=*
 $yumbin clean all
 $yumbin repolist
 
-### CentOS Base Package Install
-echo "------------------------------ CentOS Base Packages Install ------------------------------"
-$yumbin -y install centos-indexhtml centos-release yum yum-plugin-fastestmirror
 
 ### CentOS Package Upgrade
 echo "------------------------------ CentOS Package Upgrade ------------------------------" 
