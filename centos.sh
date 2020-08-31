@@ -45,7 +45,7 @@ if [ $osversion -eq "7" ];then
 	}
 elif [ $osversion -eq "6" ];then
 	export kerver=$(/bin/uname -r|awk -F\. '{print $1}'|grep ^[0-9]*)
-	export rpmbin="/bin/rpm"
+	export rpmbin="/bin/rpm --disablerepo=* --enablerepo=local"
 	export gpg="gpgkey=http://$repip/centos/$osver/RPM-GPG-KEY-CentOS-6"
 	export rmbin="/bin/rm"
 	export yumre="$yumbin -y reinstall --disablerepo=* --enablerepo=local"
