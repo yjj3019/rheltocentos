@@ -3,7 +3,7 @@ set -x
 
 ###########################################################################
 # rhel to centos migration Script
-# Ver. 06
+# Ver. 10
 ###########################################################################
 
 if [ ! -f /etc/redhat-release ];then
@@ -70,8 +70,8 @@ fi
 ### before info gather
 echo "------------------------------ Red Hat Before Info Gather ------------------------------" 
 echo "------------------------------ Red Hat Package Total Count ------------------------------" > $mig_before
-$rpmbin -qa|sort > $mig_before_pkg.txt
-cat $mig_before_pkg.txt|wc -l >> $mig_before
+$rpmbin -qa | sort > $mig_before_pkg.txt
+cat $mig_before_pkg.txt | wc -l >> $mig_before
 echo "------------------------------ Red Hat Package List Gather ------------------------------" >> $mig_before
 $rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo >> $mig_before
 echo "-----------------------------------------------------------------------------------" >> $mig_before
@@ -233,7 +233,8 @@ $rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1
 ### after info gather
 echo "------------------------------ Red Hat Before Info Gather ------------------------------" 
 echo "------------------------------ Red Hat Package Total Count ------------------------------" > $mig_after
-$rpmbin -qa|wc -l >> $mig_after
+$rpmbin -qa | sort > $mig_after_pkg.txt
+cat $mig_after_pkg.txt | wc -l >> $mig_after
 echo "------------------------------ Red Hat Package List Gather ------------------------------" >> $mig_after
 $rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo >> $mig_after
 echo "-----------------------------------------------------------------------------------" >> $mig_after
