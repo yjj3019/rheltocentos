@@ -12,11 +12,14 @@ if [ ! -f /etc/redhat-release ];then
 fi
 
 export mig_before="/root/migration_before.txt"
+export mig_before_pkg="/root/migration_before_pkg.txt"
 export mig_after="/root/migration_after.txt"
+export mig_after_pkg="/root/migration_after_pkg.txt"
 export repip="10.65.30.103"
 export osver=`cat /etc/redhat-release |awk '{print $7}'`
 export osversion=`cat /etc/redhat-release |awk '{print $7}'|awk -F\. '{print $1}'`
 export yumbin="/usr/bin/yum"
+
 
 
 
@@ -70,8 +73,8 @@ fi
 ### before info gather
 echo "------------------------------ Red Hat Before Info Gather ------------------------------" 
 echo "------------------------------ Red Hat Package Total Count ------------------------------" > $mig_before
-$rpmbin -qa | sort > $mig_before_pkg.txt
-cat $mig_before_pkg.txt | wc -l >> $mig_before
+$rpmbin -qa | sort > $mig_before_pkg
+cat $mig_before_pkg | wc -l >> $mig_before
 echo "------------------------------ Red Hat Package List Gather ------------------------------" >> $mig_before
 $rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo >> $mig_before
 echo "-----------------------------------------------------------------------------------" >> $mig_before
@@ -233,8 +236,8 @@ $rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1
 ### after info gather
 echo "------------------------------ Red Hat Before Info Gather ------------------------------" 
 echo "------------------------------ Red Hat Package Total Count ------------------------------" > $mig_after
-$rpmbin -qa | sort > $mig_after_pkg.txt
-cat $mig_after_pkg.txt | wc -l >> $mig_after
+$rpmbin -qa | sort > $mig_after_pkg
+cat $mig_after_pkg | wc -l >> $mig_after
 echo "------------------------------ Red Hat Package List Gather ------------------------------" >> $mig_after
 $rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo >> $mig_after
 echo "-----------------------------------------------------------------------------------" >> $mig_after
