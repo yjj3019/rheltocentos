@@ -70,7 +70,8 @@ fi
 ### before info gather
 echo "------------------------------ Red Hat Before Info Gather ------------------------------" 
 echo "------------------------------ Red Hat Package Total Count ------------------------------" > $mig_before
-$rpmbin -qa|wc -l >> $mig_before
+$rpmbin -qa|sort > $mig_before_pkg.txt
+cat $mig_before_pkg.txt|wc -l >> $mig_before
 echo "------------------------------ Red Hat Package List Gather ------------------------------" >> $mig_before
 $rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo >> $mig_before
 echo "-----------------------------------------------------------------------------------" >> $mig_before
