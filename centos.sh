@@ -81,6 +81,15 @@ echo "------------------------------ Red Hat Package List Gather ---------------
 $rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo >> $mig_before
 echo "-----------------------------------------------------------------------------------" >> $mig_before
 
+### Red Hat Packages Remove
+echo "------------------------------ Red Hat Packages Remove ------------------------------"
+$yumbin -y remove rhnlib abrt-plugin-bugzilla redhat-release-notes* redhat-release-eula anaconda-user-help python-gudev python-hwdata redhat-access-gui redhat-access-insights redhat-support-lib-python redhat-support-tool subscription-manager subscription-manager-gui subscription-manager-initial-setup-addon NetworkManager-config-server Red_Hat_Enterprise_Linux-Release_Notes-7-en-US Red_Hat_Enterprise_Linux-Release_Notes-7-ko-KR rhsm-gtk xorriso redhat-access-plugin-ipa subscription-manager-migration-data subscription-manager-rhsm subscription-manager-rhsm-certificates cloud-init
+
+$rpmbin -e --nodeps redhat-release-server
+$rpmbin -e --nodeps redhat-indexhtml
+$rmbin -rf /usr/share/redhat-release* /usr/share/doc/redhat-release*
+
+
 ### Repository Check 
 RES_CODE=$(/usr/bin/curl -s -o /dev/null -I -w "%{http_code}"  "http://$repip/centos/$osver/TRANS.TBL")
 if [ $RES_CODE -eq 200 ]; then
@@ -90,8 +99,7 @@ else
   exit 1;
 fi
 
-mkdir /etc/yum.repos.d/temp
-mv /etc/yum.repos.d/* /etc/yum.repos.d/temp/
+
 
 ### Repository Create
 echo "OSVER : $osver"
@@ -113,13 +121,6 @@ gpgcheck=1
 enabled=1
 EOF
 
-### Red Hat Packages Remove
-echo "------------------------------ Red Hat Packages Remove ------------------------------"
-$yumbin -y remove rhnlib abrt-plugin-bugzilla redhat-release-notes* redhat-release-eula anaconda-user-help python-gudev python-hwdata redhat-access-gui redhat-access-insights redhat-support-lib-python redhat-support-tool subscription-manager subscription-manager-gui subscription-manager-initial-setup-addon NetworkManager-config-server Red_Hat_Enterprise_Linux-Release_Notes-7-en-US Red_Hat_Enterprise_Linux-Release_Notes-7-ko-KR rhsm-gtk xorriso redhat-access-plugin-ipa subscription-manager-migration-data subscription-manager-rhsm subscription-manager-rhsm-certificates cloud-init
-
-$rpmbin -e --nodeps redhat-release-server
-$rpmbin -e --nodeps redhat-indexhtml
-$rmbin -rf /usr/share/redhat-release* /usr/share/doc/redhat-release*
 
 ### CentOS Base Package Install
 echo "------------------------------ CentOS Base Packages Install ------------------------------"
@@ -135,6 +136,9 @@ if [ ! -f $yumbin-config-manager ];then
 		exit 1;
 	fi 
 fi
+
+mkdir /etc/yum.repos.d/temp
+mv /etc/yum.repos.d/CentOS-* /etc/yum.repos.d/temp/
 
 $yumbin repolist --disablerepo=* 
 /usr/bin/yum-config-manager --disable \* 
