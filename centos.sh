@@ -29,7 +29,8 @@ if [ $osversion -eq "7" ];then
 	export rpmbin="/usr/bin/rpm"
 	export gpg="gpgkey=http://$repip/centos/$osver/RPM-GPG-KEY-CentOS-7"
 	export rmbin="/usr/bin/rm"
-	export yumre="$yumbin -y reinstall --"
+	export yumre="$yumbin -y reinstall"
+	export updatever="update7"
 	echo "Kernel Reinstall OSVER : $osver"
 	pkg_upgrade() {
 		$yumbin upgrade -y 
@@ -54,6 +55,7 @@ elif [ $osversion -eq "6" ];then
 	export gpg="gpgkey=http://$repip/centos/$osver/RPM-GPG-KEY-CentOS-6"
 	export rmbin="/bin/rm"
 	export yumre="$yumbin -y reinstall"
+	export updatever="update6"
         echo "Kernel Reinstall OSVER : $osver"
 	pkg_upgrade() {
 		$yumbin upgrade -y
@@ -80,7 +82,6 @@ $rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1
 echo "-----------------------------------------------------------------------------------" >> $mig_before
 
 ### Repository Check 
-
 RES_CODE=$(/usr/bin/curl -s -o /dev/null -I -w "%{http_code}"  "http://$repip/centos/$osver/TRANS.TBL")
 if [ $RES_CODE -eq 200 ]; then
   echo "------------------------------ Repository Found ------------------------------"
@@ -89,12 +90,24 @@ else
   exit 1;
 fi
 
+mkdir /etc/yum.repos.d/temp
+mv /etc/yum.repos.d/* /etc/yum.repos.d/temp/
+
 ### Repository Create
 echo "OSVER : $osver"
 cat << EOF > /etc/yum.repos.d/local.repo 
 [local]
 name=local
 baseurl=http://$repip/centos/$osver/
+$gpg
+gpgcheck=1
+enabled=1
+EOF
+
+cat << EOF > /etc/yum.repos.d/update.repo 
+[update]
+name=update
+baseurl=http://$repip/centos/$updatever/
 $gpg
 gpgcheck=1
 enabled=1
@@ -146,7 +159,6 @@ kernel_install
 ### grub Listing
 echo "------------------------------ CentOS grub Listing ------------------------------" 
 bootloader
-
 
 echo "------------------------------ Other Package Reinstall ------------------------------" 
 ### openssl reinstall
@@ -241,5 +253,4 @@ cat $mig_after_pkg | wc -l >> $mig_after
 echo "------------------------------ Red Hat Package List Gather ------------------------------" >> $mig_after
 $rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo >> $mig_after
 echo "-----------------------------------------------------------------------------------" >> $mig_after
-
 
