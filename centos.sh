@@ -118,7 +118,7 @@ name=update
 baseurl=http://$repip/centos/$updatever/
 $gpg
 gpgcheck=1
-enabled=1
+enabled=0
 EOF
 
 
@@ -257,4 +257,3 @@ cat $mig_after_pkg | wc -l >> $mig_after
 echo "------------------------------ Red Hat Package List Gather ------------------------------" >> $mig_after
 $rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo >> $mig_after
 echo "-----------------------------------------------------------------------------------" >> $mig_after
-
