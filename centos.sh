@@ -257,3 +257,8 @@ cat $mig_after_pkg | wc -l >> $mig_after
 echo "------------------------------ Red Hat Package List Gather ------------------------------" >> $mig_after
 $rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1 | sort | grep -v kmod-kvdo >> $mig_after
 echo "-----------------------------------------------------------------------------------" >> $mig_after
+echo "-----------------------------------------------------------------------------------"
+echo "In the case of EFI environment, please apply the following."
+echo "efibootmgr -c -d /dev/sdX -p 1 -l '\EFI\centos\shimx64.efi' -L \'CentOS\'"
+echo "efibootmgr -o [Boot order]"
+echo "efibootmgr -v"
