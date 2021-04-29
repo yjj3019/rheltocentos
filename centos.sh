@@ -259,6 +259,7 @@ $rpmbin -qa --qf "%{NAME} %{VENDOR} \n" | grep "Red Hat, Inc." | cut -d ' ' -f 1
 echo "-----------------------------------------------------------------------------------" >> $mig_after
 echo "-----------------------------------------------------------------------------------"
 echo "In the case of EFI environment, please apply the following."
-echo "efibootmgr -c -d /dev/sdX -p 1 -l '\EFI\centos\shimx64.efi' -L \'CentOS\'"
-echo "efibootmgr -o [Boot order]"
-echo "efibootmgr -v"
+echo "efibootmgr -c -d /dev/sdX -p 1 -l '\EFI\centos\shimx64.efi' -L \'CentOS\'  #Add boot entry for centos"
+echo "efibootmgr -o {Boot order}  #Select boot entry for centos"
+echo "efibootmgr -v  #Check if the boot order is centos"
+echo "efibootmgr -Bb {Red Hat entry number}  #Delete Boot Entry for Existing Red Hat (Hex Code)"
